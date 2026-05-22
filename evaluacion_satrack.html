@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evaluación Técnica · Satrack</title>
+<style>
+  :root {
+    --green: #1D9E75; --green-light: #E1F5EE; --green-dark: #0F6E56;
+    --amber: #EF9F27; --amber-light: #FAEEDA;
+    --red: #E24B4A; --red-light: #FCEBEB;
+    --blue: #378ADD; --blue-light: #E6F1FB;
+    --purple: #7F77DD; --purple-light: #EEEDFE;
+    --bg: #F8F7F4; --surface: #FFFFFF; --border: #E2E0D8;
+    --text: #1A1A18; --muted: #6B6B67; --hint: #9B9B97;
+    --radius: 12px; --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* PANTALLA DE BIENVENIDA */
+  #screen-welcome {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 2rem;
+  }
+  .welcome-card {
+    background: var(--surface); border-radius: 20px; padding: 3rem 2.5rem;
+    max-width: 480px; width: 100%; box-shadow: 0 4px 32px rgba(0,0,0,0.08);
+    text-align: center;
+  }
+  .logo-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--green-light); color: var(--green-dark);
+    padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    margin-bottom: 1.5rem; letter-spacing: .3px;
+  }
+  .welcome-card h1 { font-size: 26px; font-weight: 700; color: var(--text); margin-bottom: .5rem; }
+  .welcome-card p { font-size: 15px; color: var(--muted); line-height: 1.6; margin-bottom: 2rem; }
+  .candidate-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.5rem; }
+  .candidate-btn {
+    padding: 14px 20px; border-radius: var(--radius); border: 1.5px solid var(--border);
+    background: var(--bg); cursor: pointer; font-size: 15px; font-weight: 500;
+    color: var(--text); transition: all .15s; display: flex; align-items: center; gap: 12px;
+    text-align: left;
+  }
+  .candidate-btn:hover { border-color: var(--green); background: var(--green-light); color: var(--green-dark); }
+  .candidate-btn.selected { border-color: var(--green); background: var(--green-light); color: var(--green-dark); }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0;
+  }
+  .av-j { background: #EEEDFE; color: #534AB7; }
+  .av-d { background: #FAEEDA; color: #854F0B; }
+  .av-l { background: #E1F5EE; color: #0F6E56; }
+  .btn-start {
+    width: 100%; padding: 14px; background: var(--green); color: #fff;
+    border: none; border-radius: var(--radius); font-size: 16px; font-weight: 600;
+    cursor: pointer; transition: background .15s; display: none;
+  }
+  .btn-start:hover { background: var(--green-dark); }
+  .btn-start.visible { display: block; }
+  .meta-chips { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .chip { background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 12px; color: var(--muted); }
+
+  /* LAYOUT PRINCIPAL */
+  #screen-exam { display: none; }
+  .exam-layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: var(--surface); border-right: 1px solid var(--border);
+    padding: 1.5rem 1rem; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  }
+  .sidebar-header { padding-bottom: 1rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); }
+  .sidebar-header .candidate-name { font-size: 15px; font-weight: 600; color: var(--text); }
+  .sidebar-header .candidate-role { font-size: 12px; color: var(--muted); }
+  .block-nav { display: flex; flex-direction: column; gap: 4px; }
+  .block-nav-item {
+    padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer;
+    font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 8px;
+    transition: all .15s; border: 1px solid transparent;
+  }
+  .block-nav-item:hover { background: var(--bg); color: var(--text); }
+  .block-nav-item.active { background: var(--green-light); color: var(--green-dark); border-color: #9FE1CB; font-weight: 500; }
+  .block-nav-item.done { color: var(--green); }
+  .block-nav-item .b-icon { font-size: 16px; }
+  .block-pts { margin-left: auto; font-size: 11px; background: var(--bg); padding: 2px 7px; border-radius: 10px; }
+  .block-nav-item.active .block-pts { background: rgba(255,255,255,.6); }
+  .timer-box {
+    margin-top: 1rem; padding: 12px; background: var(--bg); border-radius: var(--radius-sm);
+    border: 1px solid var(--border); text-align: center;
+  }
+  .timer-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .timer-val { font-size: 22px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .timer-val.warn { color: var(--amber); }
+  .timer-val.urgent { color: var(--red); }
+  .progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: .75rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width .3s; }
+
+  /* MAIN */
+  .exam-main { padding: 2rem; max-width: 760px; }
+  .block-section { display: none; }
+  .block-section.active { display: block; }
+  .block-heading {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem;
+    padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+  }
+  .block-icon-wrap {
+    width: 44px; height: 44px; border-radius: var(--radius-sm); display: flex;
+    align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+  }
+  .block-heading h2 { font-size: 18px; font-weight: 600; color: var(--text); }
+  .block-heading .block-desc { font-size: 13px; color: var(--muted); }
+  .block-meta-row { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+  .tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+  .tag-green { background: var(--green-light); color: var(--green-dark); }
+  .tag-amber { background: var(--amber-light); color: #854F0B; }
+  .tag-blue { background: var(--blue-light); color: #185FA5; }
+  .tag-purple { background: var(--purple-light); color: #534AB7; }
+  .tag-red { background: var(--red-light); color: #A32D2D; }
+
+  /* PREGUNTAS */
+  .q-wrap { margin-bottom: 1.5rem; }
+  .q-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: .5rem; }
+  .q-number { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .q-pts { font-size: 11px; color: var(--hint); }
+  .q-text { font-size: 15px; color: var(--text); line-height: 1.65; margin-bottom: .75rem; }
+  code { background: var(--bg); border: 1px solid var(--border); padding: 1px 5px; border-radius: 4px; font-size: 13px; font-family: 'Consolas', monospace; }
+  .options-list { display: flex; flex-direction: column; gap: 8px; }
+  .option-label {
+    display: flex; align-items: flex-start; gap: 10px; padding: 11px 14px;
+    border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+    background: var(--bg); cursor: pointer; font-size: 14px; color: var(--text);
+    transition: all .15s; line-height: 1.5;
+  }
+  .option-label:hover { border-color: var(--green); background: var(--green-light); }
+  .option-label input[type="radio"] { display: none; }
+  .option-label.selected { border-color: var(--green); background: var(--green-light); }
+  .opt-letter { font-weight: 600; color: var(--green-dark); min-width: 18px; }
+
+  textarea.open-ans {
+    width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    padding: 12px 14px; font-size: 14px; color: var(--text); background: var(--bg);
+    resize: vertical; min-height: 100px; font-family: inherit; line-height: 1.6;
+    outline: none; transition: border-color .15s;
+  }
+  textarea.open-ans:focus { border-color: var(--green); background: #fff; }
+
+  .scenario-box {
+    background: var(--blue-light); border-left: 3px solid var(--blue);
+    padding: 12px 14px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 14px; color: var(--text); line-height: 1.7; margin-bottom: 1rem;
+  }
+
+  .code-review-block {
+    background: #1E1E1E; border-radius: var(--radius-sm); padding: 1rem 1.25rem;
+    font-family: 'Consolas', 'Courier New', monospace; font-size: 13px;
+    color: #D4D4D4; line-height: 1.7; margin-bottom: .75rem; overflow-x: auto;
+    white-space: pre;
+  }
+  .code-kw { color: #569CD6; } .code-type { color: #4EC9B0; }
+  .code-str { color: #CE9178; } .code-comment { color: #6A9955; }
+  .code-method { color: #DCDCAA; }
+
+  /* NAVEGACIÓN */
+  .nav-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
+  }
+  .btn-nav {
+    padding: 10px 22px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500;
+    cursor: pointer; border: 1.5px solid var(--border); background: var(--surface);
+    color: var(--text); transition: all .15s;
+  }
+  .btn-nav:hover { background: var(--bg); border-color: #ccc; }
+  .btn-nav.primary { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn-nav.primary:hover { background: var(--green-dark); }
+  .btn-nav:disabled { opacity: .4; cursor: default; }
+
+  /* PANTALLA FINAL */
+  #screen-done {
+    display: none; min-height: 100vh; align-items: center;
+    justify-content: center; padding: 2rem;
+  }
+  .done-card {
+    background: var(--surface); border-radius: 20px; padding: 3rem 2.5rem;
+    max-width: 500px; width: 100%; box-shadow: 0 4px 32px rgba(0,0,0,0.08); text-align: center;
+  }
+  .done-icon { font-size: 56px; margin-bottom: 1rem; }
+  .done-card h2 { font-size: 24px; font-weight: 700; margin-bottom: .5rem; }
+  .done-card p { font-size: 15px; color: var(--muted); line-height: 1.6; margin-bottom: 1.5rem; }
+  .done-detail { background: var(--bg); border-radius: var(--radius-sm); padding: 1rem; font-size: 13px; color: var(--muted); }
+  .saving-msg { font-size: 14px; color: var(--green); margin-top: 1rem; }
+
+  @media (max-width: 700px) {
+    .exam-layout { grid-template-columns: 1fr; }
+    .sidebar { position: relative; height: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PANTALLA BIENVENIDA -->
+<div id="screen-welcome">
+  <div class="welcome-card">
+    <div class="logo-badge">🚛 Satrack · Ingeniería</div>
+    <h1>Evaluación Técnica</h1>
+    <p>Semi-Senior → Senior &nbsp;·&nbsp; Diagnóstico de plan de carrera</p>
+    <div class="meta-chips">
+      <span class="chip">⏱ 60 minutos</span>
+      <span class="chip">📋 30 preguntas</span>
+      <span class="chip">💯 100 puntos</span>
+    </div>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:1rem">Selecciona tu nombre para comenzar:</p>
+    <div class="candidate-grid">
+      <div class="candidate-btn" onclick="selectCandidate('Jeimar')" id="btn-jeimar">
+        <div class="avatar av-j">J</div>
+        <div><div style="font-weight:600">Jeimar</div><div style="font-size:12px;opacity:.7">Desarrollador Semi-Senior</div></div>
+      </div>
+      <div class="candidate-btn" onclick="selectCandidate('Daniel')" id="btn-daniel">
+        <div class="avatar av-d">D</div>
+        <div><div style="font-weight:600">Daniel</div><div style="font-size:12px;opacity:.7">Desarrollador Semi-Senior</div></div>
+      </div>
+      <div class="candidate-btn" onclick="selectCandidate('Luis')" id="btn-luis">
+        <div class="avatar av-l">L</div>
+        <div><div style="font-weight:600">Luis</div><div style="font-size:12px;opacity:.7">Desarrollador Semi-Senior</div></div>
+      </div>
+    </div>
+    <button class="btn-start" id="btn-start" onclick="startExam()">Comenzar evaluación →</button>
+  </div>
+</div>
+
+<!-- PANTALLA EVALUACIÓN -->
+<div id="screen-exam">
+  <div class="exam-layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="candidate-name" id="sidebar-name">—</div>
+        <div class="candidate-role">Evaluación Semi-Senior → Senior</div>
+      </div>
+      <div class="block-nav">
+        <div class="block-nav-item active" onclick="goBlock(0)" id="nav-0">
+          <span class="b-icon">📚</span> Fundamentos <span class="block-pts">20 pts</span>
+        </div>
+        <div class="block-nav-item" onclick="goBlock(1)" id="nav-1">
+          <span class="b-icon">🏗</span> Arquitectura <span class="block-pts">25 pts</span>
+        </div>
+        <div class="block-nav-item" onclick="goBlock(2)" id="nav-2">
+          <span class="b-icon">🔍</span> Code Review <span class="block-pts">20 pts</span>
+        </div>
+        <div class="block-nav-item" onclick="goBlock(3)" id="nav-3">
+          <span class="b-icon">⚙️</span> Procesos <span class="block-pts">15 pts</span>
+        </div>
+        <div class="block-nav-item" onclick="goBlock(4)" id="nav-4">
+          <span class="b-icon">🧭</span> Liderazgo <span class="block-pts">20 pts</span>
+        </div>
+      </div>
+      <div class="timer-box">
+        <div class="timer-label">Tiempo restante</div>
+        <div class="timer-val" id="timer">60:00</div>
+        <div class="progress-bar"><div class="progress-fill" id="prog-bar" style="width:100%"></div></div>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="exam-main">
+
+      <!-- BLOQUE 1: FUNDAMENTOS -->
+      <div class="block-section active" id="block-0">
+        <div class="block-heading">
+          <div class="block-icon-wrap" style="background:var(--green-light)">📚</div>
+          <div>
+            <h2>Bloque 1 — Fundamentos técnicos</h2>
+            <div class="block-meta-row">
+              <span class="tag tag-green">15 min</span>
+              <span class="tag tag-green">20 pts</span>
+              <span class="tag tag-green">Opción múltiple · 1 respuesta</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta 1 · .NET/C#</span><span class="q-pts">2 pts</span></div>
+          <div class="q-text">¿Cuál es la diferencia principal entre <code>Task.WhenAll</code> y <code>Task.WhenAny</code> en C# asíncrono?</div>
+          <div class="options-list">
+            <label class="option-label" onclick="selectOpt(this,'q1')"><input type="radio" name="q1" value="A"><span class="opt-letter">A</span>WhenAll espera todas las tareas; WhenAny completa cuando cualquiera termina</label>
+            <label class="option-label" onclick="selectOpt(this,'q1')"><input type="radio" name="q1" value="B"><span class="opt-letter">B</span>WhenAll espera que todas completen; WhenAny retorna al completar la primera</label>
+            <label class="option-label" onclick="selectOpt(this,'q1')"><input type="radio" name="q1" value="C"><span class="opt-letter">C</span>Son equivalentes, solo difieren en sintaxis</label>
+            <label class="option-label" onclick="selectOpt(this,'q1')"><input type="radio" name="q1" value="D"><span class="opt-letter">D</span>WhenAny cancela las demás tareas automáticamente</label>
+          </div>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta 2 · .NET/C#</span><span class="q-pts">2 pts</span></div>
+          <div class="q-text">En Entity Framework Core, ¿qué es el problema N+1 y cómo se soluciona correctamente?</div>
+          <div class="options-list">
+            <label class="option-label" onclick="selectOpt(this,'q2')"><input type="radio" name="q2" value="A"><span class="opt-letter">A</span>Un error de compilación cuando hay más de N entidades relacionadas</label>
+            <label class="option-label" onclick="selectOpt(this,'q2')"><input type="radio" name="q2" value="B"><span class="opt-letter">B</span>Un bug de concurrencia al acceder desde múltiples hilos simultáneos</label>
+            <label class="option-label" onclick="selectOpt(this,'q2')"><input type="radio" name="q2" value="C"><span class="opt-letter">C</span>Una query por cada entidad hija en un loop; se soluciona con <code>.Include()</code> o proyecciones en la query inicial</label>
+            <label class="option-label" onclick="selectOpt(this,'q2')"><input type="radio" name="q2" value="D"><span class="opt-letter">D</span>Cuando el índice primario supera el límite de caracteres permitidos</label>
+          </div>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta 3 · Angular</span><span class="q-pts">2 pts</span></div>
+          <div class="q-text">¿En qué escenario es más conveniente usar <code>ChangeDetectionStrategy.OnPush</code>?</div>
+          <div class="options-list">
+            <label class="option-label" onclick="selectOpt(this,'q3')"><input type="radio" name="q3" value="A"><span class="opt-letter">A</span>Cuando el componente necesita detectar cambios directamente en el DOM</label>
+            <label class="option-label" onclick="selectOpt(this,'q3')"><input type="radio" name="q3" value="B"><span class="opt-letter">B</span>Cuando el componente recibe datos por <code>@Input()</code> inmutables o usa Observables con <code>async</code> pipe</label>
+            <label class="option-label" onclick="selectOpt(this,'q3')"><input type="radio" name="q3" value="C"><span class="opt-letter">C</span>Solo en componentes que no tienen template HTML</label>
+            <label class="option-label" onclick="selectOpt(this,'q3')"><input type="radio" name="q3" value="D"><span class="opt-letter">D</span>Cuando se necesita forzar una re-renderización inmediata del componente</label>
+          </div>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta 4 · Angular</span><span class="q-pts">2 pts</span></div>
+          <div class="q-text">¿Qué ventaja principal ofrece el lazy loading de módulos en Angular?</div>
+          <div class="options-list">
+            <label class="option-label" onclick="selectOpt(this,'q4')"><input type="radio" name="q4" value="A"><span class="opt-letter">A</span>Reduce el tamaño del bundle inicial cargando módulos solo cuando se necesitan</label>
+            <label class="option-label" onclick="selectOpt(this,'q4')"><input type="radio" name="q4" value="B"><span class="opt-letter">B</span>Permite usar componentes sin declararlos en ningún módulo</label>
+            <label class="option-label" onclick="selectOpt(this,'q4')"><input type="radio" name="q4" value="C"><span class="opt-letter">C</span>Elimina completamente la necesidad de usar <code>RouterModule</code></label>
+            <label class="option-label" onclick="selectOpt(this,'q4')"><input type="radio" name="q4" value="D"><span class="opt-letter">D</span>Mejora exclusivamente la velocidad de compilación en desarrollo</label>
+          </div>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta 5 · Flutter</span><span class="q-pts">2 pts</span></div>
+          <div class="q-text">¿Cuál es la diferencia entre <code>StatelessWidget</code> y <code>StatefulWidget</code> en Flutter?</div>
+          <div class="options-list">
+            <label class="option-label" onclick="selectOpt(this,'q5')"><input type="radio" name="q5" value="A"><span class="opt-letter">A</span>StatelessWidget usa menos memoria RAM y siempre es más rápido</label>
+            <label class="option-label" onclick="selectOpt(this,'q5')"><input type="radio" name="q5" value="B"><span class="opt-letter">B</span>StatelessWidget no puede cambiar su apariencia; StatefulWidget puede actualizarse con <code>setState()</code></label>
+            <label class="option-label" onclick="selectOpt(this,'q5')"><input type="radio" name="q5" value="C"><span class="opt-letter">C</span>Solo StatefulWidget permite usar <code>BuildContext</code></label>
+            <label class="option-label" onclick="selectOpt(this,'q5')"><input type="radio" name="q5" value="D"><span class="opt-letter">D</span>No hay diferencia funcional, es solo convención de código</label>
+          </div>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta 6 · SQL Server</span><span class="q-pts">2 pts</span></div>
+          <div class="q-text">¿Cuándo es preferible usar un índice <code>NONCLUSTERED</code> sobre un <code>CLUSTERED</code> en SQL Server?</div>
+          <div class="options-list">
+            <label class="option-label" onclick="selectOpt(this,'q6')"><input type="radio" name="q6" value="A"><span class="opt-letter">A</span>Siempre que la tabla tenga menos de 1000 registros</label>
+            <label class="option-label" onclick="selectOpt(this,'q6')"><input type="radio" name="q6" value="B"><span class="opt-letter">B</span>Solo para columnas de tipo <code>VARCHAR</code></label>
+            <label class="option-label" onclick="selectOpt(this,'q6')"><input type="radio" name="q6" value="C"><span class="opt-letter">C</span>Para columnas frecuentemente usadas en filtros o joins que no son la clave principal</label>
+            <label class="option-label" onclick="selectOpt(this,'q6')"><input type="radio" name="q6" value="D"><span class="opt-letter">D</span>Exclusivamente cuando se necesita ordenamiento descendente</label>
+          </div>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta 7 · Git</span><span class="q-pts">2 pts</span></div>
+          <div class="q-text">En trunk-based development, ¿cuál es la práctica correcta respecto a las ramas de feature?</div>
+          <div class="options-list">
+            <label class="option-label" onclick="selectOpt(this,'q7')"><input type="radio" name="q7" value="A"><span class="opt-letter">A</span>Las features viven en ramas de larga duración (semanas o meses)</label>
+            <label class="option-label" onclick="selectOpt(this,'q7')"><input type="radio" name="q7" value="B"><span class="opt-letter">B</span>Las ramas son de corta duración (horas o 1-2 días) y se integran frecuentemente al trunk</label>
+            <label class="option-label" onclick="selectOpt(this,'q7')"><input type="radio" name="q7" value="C"><span class="opt-letter">C</span>No se permiten ramas; todo el trabajo va directamente a main</label>
+            <label class="option-label" onclick="selectOpt(this,'q7')"><input type="radio" name="q7" value="D"><span class="opt-letter">D</span>Cada desarrollador tiene su propia rama permanente</label>
+          </div>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta 8 · Clean Architecture</span><span class="q-pts">2 pts</span></div>
+          <div class="q-text">En Clean Architecture, ¿qué capa puede depender de la capa de Infraestructura?</div>
+          <div class="options-list">
+            <label class="option-label" onclick="selectOpt(this,'q8')"><input type="radio" name="q8" value="A"><span class="opt-letter">A</span>Domain</label>
+            <label class="option-label" onclick="selectOpt(this,'q8')"><input type="radio" name="q8" value="B"><span class="opt-letter">B</span>Application</label>
+            <label class="option-label" onclick="selectOpt(this,'q8')"><input type="radio" name="q8" value="C"><span class="opt-letter">C</span>Ninguna; Infraestructura depende de las capas internas, no al revés</label>
+            <label class="option-label" onclick="selectOpt(this,'q8')"><input type="radio" name="q8" value="D"><span class="opt-letter">D</span>Presentation y Domain por igual</label>
+          </div>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta 9 · CI/CD</span><span class="q-pts">2 pts</span></div>
+          <div class="q-text">¿Cuál es la diferencia entre Continuous Delivery y Continuous Deployment?</div>
+          <div class="options-list">
+            <label class="option-label" onclick="selectOpt(this,'q9')"><input type="radio" name="q9" value="A"><span class="opt-letter">A</span>Continuous Delivery requiere aprobación manual para producción; Continuous Deployment lo hace automáticamente</label>
+            <label class="option-label" onclick="selectOpt(this,'q9')"><input type="radio" name="q9" value="B"><span class="opt-letter">B</span>Son sinónimos, solo difieren en el equipo que los implementa</label>
+            <label class="option-label" onclick="selectOpt(this,'q9')"><input type="radio" name="q9" value="C"><span class="opt-letter">C</span>Continuous Deployment aplica únicamente a ambientes cloud</label>
+            <label class="option-label" onclick="selectOpt(this,'q9')"><input type="radio" name="q9" value="D"><span class="opt-letter">D</span>Continuous Delivery incluye pruebas automatizadas; Continuous Deployment no</label>
+          </div>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta 10 · SOLID</span><span class="q-pts">2 pts</span></div>
+          <div class="q-text">¿Qué principio SOLID se viola cuando una clase tiene múltiples razones para cambiar?</div>
+          <div class="options-list">
+            <label class="option-label" onclick="selectOpt(this,'q10')"><input type="radio" name="q10" value="A"><span class="opt-letter">A</span>Single Responsibility Principle</label>
+            <label class="option-label" onclick="selectOpt(this,'q10')"><input type="radio" name="q10" value="B"><span class="opt-letter">B</span>Open/Closed Principle</label>
+            <label class="option-label" onclick="selectOpt(this,'q10')"><input type="radio" name="q10" value="C"><span class="opt-letter">C</span>Liskov Substitution Principle</label>
+            <label class="option-label" onclick="selectOpt(this,'q10')"><input type="radio" name="q10" value="D"><span class="opt-letter">D</span>Dependency Inversion Principle</label>
+          </div>
+        </div>
+
+        <div class="nav-bar">
+          <button class="btn-nav" disabled>← Anterior</button>
+          <button class="btn-nav primary" onclick="goBlock(1)">Arquitectura →</button>
+        </div>
+      </div>
+
+      <!-- BLOQUE 2: ARQUITECTURA -->
+      <div class="block-section" id="block-1">
+        <div class="block-heading">
+          <div class="block-icon-wrap" style="background:var(--blue-light)">🏗</div>
+          <div>
+            <h2>Bloque 2 — Arquitectura y diseño</h2>
+            <div class="block-meta-row">
+              <span class="tag tag-blue">15 min</span>
+              <span class="tag tag-blue">25 pts</span>
+              <span class="tag tag-blue">Caso escrito</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="scenario-box">
+          <strong>Escenario — Módulo de alertas en tiempo real:</strong><br><br>
+          Satrack necesita un módulo que reciba eventos de telemetría de <strong>+500 vehículos simultáneos</strong>. Para cada evento el sistema evalúa reglas configurables (exceso de velocidad, zona restringida, inactividad) y debe <strong>notificar al operador en menos de 5 segundos</strong>. Stack disponible: backend .NET 8, base de datos SQL Server y frontend Angular.
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta A</span><span class="q-pts">10 pts</span></div>
+          <div class="q-text">Describe los componentes principales de tu solución y cómo se comunican entre sí. Justifica por qué elegirías cada componente (ej: por qué mensajería vs HTTP directo).</div>
+          <textarea class="open-ans" id="q_arch_a" placeholder="Describe tu solución arquitectónica aquí..."></textarea>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta B</span><span class="q-pts">8 pts</span></div>
+          <div class="q-text">¿Dónde guardarías el historial de alertas y cómo evitarías que el volumen de datos degrade el rendimiento del sistema actual?</div>
+          <textarea class="open-ans" id="q_arch_b" placeholder="Describe tu estrategia de datos aquí..."></textarea>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta C</span><span class="q-pts">7 pts</span></div>
+          <div class="q-text">¿Qué harías para que las reglas de negocio sean configurables sin necesidad de redesplegar la aplicación?</div>
+          <textarea class="open-ans" id="q_arch_c" placeholder="Describe tu enfoque de configurabilidad aquí..."></textarea>
+        </div>
+
+        <div class="nav-bar">
+          <button class="btn-nav" onclick="goBlock(0)">← Fundamentos</button>
+          <button class="btn-nav primary" onclick="goBlock(2)">Code Review →</button>
+        </div>
+      </div>
+
+      <!-- BLOQUE 3: CODE REVIEW -->
+      <div class="block-section" id="block-2">
+        <div class="block-heading">
+          <div class="block-icon-wrap" style="background:var(--amber-light)">🔍</div>
+          <div>
+            <h2>Bloque 3 — Code Review</h2>
+            <div class="block-meta-row">
+              <span class="tag tag-amber">10 min</span>
+              <span class="tag tag-amber">20 pts</span>
+              <span class="tag tag-amber">Detección de problemas</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Fragmento A · C# / .NET</span><span class="q-pts">10 pts</span></div>
+          <div class="q-text">Identifica todos los problemas en el siguiente código y explica cómo los corregirías:</div>
+          <div class="code-review-block"><span class="code-kw">public async</span> <span class="code-type">Task</span>&lt;<span class="code-type">List</span>&lt;<span class="code-type">VehicleAlertDto</span>&gt;&gt; <span class="code-method">GetAlerts</span>(<span class="code-kw">int</span> fleetId)
+{
+    <span class="code-kw">var</span> vehicles = _db.Vehicles
+        .<span class="code-method">Where</span>(v => v.FleetId == fleetId)
+        .<span class="code-method">ToList</span>();
+
+    <span class="code-kw">var</span> result = <span class="code-kw">new</span> <span class="code-type">List</span>&lt;<span class="code-type">VehicleAlertDto</span>&gt;();
+
+    <span class="code-kw">foreach</span> (<span class="code-kw">var</span> vehicle <span class="code-kw">in</span> vehicles)
+    {
+        <span class="code-kw">var</span> alerts = _db.Alerts
+            .<span class="code-method">Where</span>(a => a.VehicleId == vehicle.Id)
+            .<span class="code-method">ToList</span>();
+
+        result.<span class="code-method">Add</span>(<span class="code-kw">new</span> <span class="code-type">VehicleAlertDto</span>
+        {
+            VehicleId = vehicle.Id,
+            AlertCount = alerts.Count,
+            LastAlert = alerts.<span class="code-method">OrderByDescending</span>(a => a.Timestamp)
+                              .<span class="code-method">FirstOrDefault</span>()?.Message
+        });
+    }
+
+    <span class="code-kw">return</span> result;
+}</div>
+          <textarea class="open-ans" id="q_cr_a" placeholder="Lista los problemas que identificas y cómo los corregirías..."></textarea>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Fragmento B · TypeScript / Angular</span><span class="q-pts">10 pts</span></div>
+          <div class="q-text">Identifica todos los problemas en el siguiente componente y explica cómo los corregirías:</div>
+          <div class="code-review-block"><span class="code-comment">// fleet-map.component.ts</span>
+@<span class="code-method">Component</span>({
+  selector: <span class="code-str">'app-fleet-map'</span>,
+  template: `
+    &lt;div *ngFor=<span class="code-str">"let v of vehicles"</span>&gt;
+      &lt;span&gt;{{ v.plate }} - {{ v.status }}&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;button (click)=<span class="code-str">"loadAll()"</span>&gt;Cargar&lt;/button&gt;
+  `
+})
+<span class="code-kw">export class</span> <span class="code-type">FleetMapComponent</span> <span class="code-kw">implements</span> <span class="code-type">OnInit</span> {
+  vehicles: <span class="code-kw">any</span>[] = [];
+  <span class="code-kw">private</span> sub: <span class="code-type">Subscription</span>;
+
+  <span class="code-method">ngOnInit</span>() {
+    <span class="code-kw">this</span>.sub = <span class="code-kw">this</span>.vehicleService.<span class="code-method">getUpdates</span>().<span class="code-method">subscribe</span>(data => {
+      <span class="code-kw">this</span>.vehicles = data;
+    });
+  }
+
+  <span class="code-method">loadAll</span>() {
+    <span class="code-kw">this</span>.http.<span class="code-method">get</span>(<span class="code-str">'http://api.satrack.internal/vehicles/all'</span>)
+      .<span class="code-method">subscribe</span>(res => {
+        <span class="code-kw">this</span>.vehicles = res <span class="code-kw">as any</span>;
+      });
+  }
+}</div>
+          <textarea class="open-ans" id="q_cr_b" placeholder="Lista los problemas que identificas y cómo los corregirías..."></textarea>
+        </div>
+
+        <div class="nav-bar">
+          <button class="btn-nav" onclick="goBlock(1)">← Arquitectura</button>
+          <button class="btn-nav primary" onclick="goBlock(3)">Procesos →</button>
+        </div>
+      </div>
+
+      <!-- BLOQUE 4: PROCESOS -->
+      <div class="block-section" id="block-3">
+        <div class="block-heading">
+          <div class="block-icon-wrap" style="background:#FAEEDA">⚙️</div>
+          <div>
+            <h2>Bloque 4 — Calidad y procesos</h2>
+            <div class="block-meta-row">
+              <span class="tag tag-amber">10 min</span>
+              <span class="tag tag-amber">15 pts</span>
+              <span class="tag tag-amber">Escenarios situacionales</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Escenario 1</span><span class="q-pts">5 pts</span></div>
+          <div class="scenario-box">Tu PR lleva 3 días sin revisión. El sprint termina mañana. El cambio afecta un módulo crítico de alertas que está generando bugs en producción. ¿Qué haces?</div>
+          <textarea class="open-ans" id="q_p1" placeholder="Describe tu plan de acción..."></textarea>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Escenario 2</span><span class="q-pts">5 pts</span></div>
+          <div class="scenario-box">Encuentras un bug crítico en producción que no está en el sprint actual y no tiene ticket. Afecta el cálculo de consumo de combustible para 3 clientes grandes. ¿Cómo actúas?</div>
+          <textarea class="open-ans" id="q_p2" placeholder="Describe tu plan de acción..."></textarea>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Escenario 3</span><span class="q-pts">5 pts</span></div>
+          <div class="scenario-box">En una revisión de código, un compañero Junior entregó una funcionalidad que funciona pero el código es difícil de mantener: lógica mezclada, sin tests, nombres poco claros. ¿Cómo se lo dices?</div>
+          <textarea class="open-ans" id="q_p3" placeholder="Describe cómo darías el feedback..."></textarea>
+        </div>
+
+        <div class="nav-bar">
+          <button class="btn-nav" onclick="goBlock(2)">← Code Review</button>
+          <button class="btn-nav primary" onclick="goBlock(4)">Liderazgo →</button>
+        </div>
+      </div>
+
+      <!-- BLOQUE 5: LIDERAZGO -->
+      <div class="block-section" id="block-4">
+        <div class="block-heading">
+          <div class="block-icon-wrap" style="background:var(--purple-light)">🧭</div>
+          <div>
+            <h2>Bloque 5 — Liderazgo técnico incipiente</h2>
+            <div class="block-meta-row">
+              <span class="tag tag-purple">10 min</span>
+              <span class="tag tag-purple">20 pts</span>
+              <span class="tag tag-purple">Respuesta abierta</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta 1</span><span class="q-pts">8 pts</span></div>
+          <div class="q-text">Describe una decisión técnica relevante que hayas tomado en los últimos 6 meses. ¿Qué alternativas evaluaste, cómo la tomaste y qué resultó?</div>
+          <textarea class="open-ans" id="q_l1" placeholder="Describe la situación, las alternativas evaluadas y el resultado..."></textarea>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta 2</span><span class="q-pts">6 pts</span></div>
+          <div class="q-text">Si tuvieras que hacer el onboarding de un desarrollador Junior nuevo al equipo hoy, ¿qué harías/entregarías durante su primera semana?</div>
+          <textarea class="open-ans" id="q_l2" placeholder="Describe tu plan de onboarding..."></textarea>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta 3</span><span class="q-pts">6 pts</span></div>
+          <div class="q-text">¿Qué hace un Pull Request de calidad? Describe cómo son tus PRs actualmente y qué mejorarías.</div>
+          <textarea class="open-ans" id="q_l3" placeholder="Describe tu criterio de calidad para PRs..."></textarea>
+        </div>
+
+        <div class="nav-bar">
+          <button class="btn-nav" onclick="goBlock(3)">← Procesos</button>
+          <button class="btn-nav primary" onclick="submitExam()" id="btn-submit">Enviar evaluación ✓</button>
+        </div>
+      </div>
+
+    </div><!-- /exam-main -->
+  </div><!-- /exam-layout -->
+</div><!-- /screen-exam -->
+
+<!-- PANTALLA FINAL -->
+<div id="screen-done" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:2rem">
+  <div class="done-card">
+    <div class="done-icon">🎉</div>
+    <h2>¡Evaluación enviada!</h2>
+    <p id="done-msg">Tus respuestas fueron guardadas correctamente. El equipo de Ingeniería de Satrack revisará tus resultados pronto.</p>
+    <div class="done-detail" id="done-detail"></div>
+    <div class="saving-msg" id="saving-status"></div>
+  </div>
+</div>
+
+<script>
+  // ─── CONFIG ───────────────────────────────────────────────
+  // REEMPLAZA esta URL con la del Web App de tu Apps Script después de desplegarlo
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzypZ78G0t51hpCIdLLFZzung0c5py6nkoaXWBBeSft1BKpwPxnJmAsEJ7iphkxoZKAdg/exec';
+
+  // ─── ESTADO ───────────────────────────────────────────────
+  let selectedCandidate = null;
+  let currentBlock = 0;
+  let timerInterval = null;
+  let secondsLeft = 3600;
+  let examStartTime = null;
+
+  // ─── SELECCIÓN DE CANDIDATO ───────────────────────────────
+  function selectCandidate(name) {
+    selectedCandidate = name;
+    ['jeimar','daniel','luis'].forEach(n => {
+      document.getElementById('btn-'+n).classList.remove('selected');
+    });
+    document.getElementById('btn-'+name.toLowerCase()).classList.add('selected');
+    document.getElementById('btn-start').classList.add('visible');
+  }
+
+  function startExam() {
+    if (!selectedCandidate) return;
+    document.getElementById('screen-welcome').style.display = 'none';
+    document.getElementById('screen-exam').style.display = 'block';
+    document.getElementById('sidebar-name').textContent = selectedCandidate;
+    examStartTime = new Date();
+    startTimer();
+  }
+
+  // ─── TIMER ────────────────────────────────────────────────
+  function startTimer() {
+    timerInterval = setInterval(() => {
+      secondsLeft--;
+      const m = Math.floor(secondsLeft / 60);
+      const s = secondsLeft % 60;
+      const el = document.getElementById('timer');
+      el.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+      const pct = (secondsLeft / 3600) * 100;
+      document.getElementById('prog-bar').style.width = pct + '%';
+      el.className = 'timer-val' + (secondsLeft < 600 ? ' urgent' : secondsLeft < 1200 ? ' warn' : '');
+      if (secondsLeft <= 0) { clearInterval(timerInterval); submitExam(); }
+    }, 1000);
+  }
+
+  // ─── NAVEGACIÓN ───────────────────────────────────────────
+  function goBlock(idx) {
+    document.querySelectorAll('.block-section').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.block-nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('block-'+idx).classList.add('active');
+    document.getElementById('nav-'+idx).classList.add('active');
+    currentBlock = idx;
+    window.scrollTo(0, 0);
+  }
+
+  // ─── SELECCIÓN OPCIÓN MÚLTIPLE ────────────────────────────
+  function selectOpt(label, name) {
+    document.querySelectorAll('[name="'+name+'"]').forEach(r => {
+      r.closest('.option-label').classList.remove('selected');
+    });
+    label.classList.add('selected');
+  }
+
+  // ─── RECOLECCIÓN DE RESPUESTAS ────────────────────────────
+  function collectAnswers() {
+    const mc = {};
+    for (let i = 1; i <= 10; i++) {
+      const r = document.querySelector('[name="q'+i+'"]:checked');
+      mc['q'+i] = r ? r.value : '';
+    }
+    return {
+      candidato: selectedCandidate,
+      fecha: new Date().toLocaleString('es-CO'),
+      duracion_min: Math.round((3600 - secondsLeft) / 60),
+      // Bloque 1
+      q1: mc.q1, q2: mc.q2, q3: mc.q3, q4: mc.q4, q5: mc.q5,
+      q6: mc.q6, q7: mc.q7, q8: mc.q8, q9: mc.q9, q10: mc.q10,
+      // Bloque 2
+      arq_a: document.getElementById('q_arch_a').value,
+      arq_b: document.getElementById('q_arch_b').value,
+      arq_c: document.getElementById('q_arch_c').value,
+      // Bloque 3
+      cr_a: document.getElementById('q_cr_a').value,
+      cr_b: document.getElementById('q_cr_b').value,
+      // Bloque 4
+      proc_1: document.getElementById('q_p1').value,
+      proc_2: document.getElementById('q_p2').value,
+      proc_3: document.getElementById('q_p3').value,
+      // Bloque 5
+      lid_1: document.getElementById('q_l1').value,
+      lid_2: document.getElementById('q_l2').value,
+      lid_3: document.getElementById('q_l3').value,
+    };
+  }
+
+  // ─── ENVÍO ────────────────────────────────────────────────
+  async function submitExam() {
+    clearInterval(timerInterval);
+    const data = collectAnswers();
+
+    document.getElementById('screen-exam').style.display = 'none';
+    document.getElementById('screen-done').style.display = 'flex';
+    document.getElementById('done-detail').textContent =
+      'Candidato: ' + data.candidato + ' · Tiempo usado: ' + data.duracion_min + ' min · Fecha: ' + data.fecha;
+    document.getElementById('saving-status').textContent = 'Guardando respuestas…';
+
+    try {
+      const resp = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      document.getElementById('saving-status').textContent = '✅ Guardado en Google Sheets correctamente';
+    } catch (e) {
+      document.getElementById('saving-status').textContent = '⚠️ No se pudo conectar con Google Sheets. Copia la URL de esta página para reenviar.';
+      console.error('Error guardando:', e);
+    }
+  }
+</script>
+</body>
+</html>
