@@ -241,19 +241,22 @@
       </div>
       <div class="block-nav">
         <div class="block-nav-item active" onclick="goBlock(0)" id="nav-0">
-          <span class="b-icon">📚</span> Fundamentos <span class="block-pts">20 pts</span>
+          <span class="b-icon">📚</span> Fundamentos <span class="block-pts">15 pts</span>
         </div>
         <div class="block-nav-item" onclick="goBlock(1)" id="nav-1">
-          <span class="b-icon">🏗</span> Arquitectura <span class="block-pts">25 pts</span>
+          <span class="b-icon">🏗</span> Arquitectura <span class="block-pts">20 pts</span>
         </div>
         <div class="block-nav-item" onclick="goBlock(2)" id="nav-2">
-          <span class="b-icon">🔍</span> Code Review <span class="block-pts">20 pts</span>
+          <span class="b-icon">🔍</span> Code Review <span class="block-pts">25 pts</span>
         </div>
         <div class="block-nav-item" onclick="goBlock(3)" id="nav-3">
           <span class="b-icon">⚙️</span> Procesos <span class="block-pts">15 pts</span>
         </div>
         <div class="block-nav-item" onclick="goBlock(4)" id="nav-4">
-          <span class="b-icon">🧭</span> Liderazgo <span class="block-pts">20 pts</span>
+          <span class="b-icon">🤖</span> IA en el día a día <span class="block-pts">10 pts</span>
+        </div>
+        <div class="block-nav-item" onclick="goBlock(5)" id="nav-5">
+          <span class="b-icon">🧭</span> Liderazgo <span class="block-pts">15 pts</span>
         </div>
       </div>
       <div class="timer-box">
@@ -274,7 +277,7 @@
             <h2>Bloque 1 — Fundamentos técnicos</h2>
             <div class="block-meta-row">
               <span class="tag tag-green">15 min</span>
-              <span class="tag tag-green">20 pts</span>
+              <span class="tag tag-green">15 pts</span>
               <span class="tag tag-green">Opción múltiple · 1 respuesta</span>
             </div>
           </div>
@@ -404,7 +407,7 @@
             <h2>Bloque 2 — Arquitectura y diseño</h2>
             <div class="block-meta-row">
               <span class="tag tag-blue">15 min</span>
-              <span class="tag tag-blue">25 pts</span>
+              <span class="tag tag-blue">20 pts</span>
               <span class="tag tag-blue">Caso escrito</span>
             </div>
           </div>
@@ -447,7 +450,7 @@
             <h2>Bloque 3 — Code Review</h2>
             <div class="block-meta-row">
               <span class="tag tag-amber">10 min</span>
-              <span class="tag tag-amber">20 pts</span>
+              <span class="tag tag-amber">25 pts</span>
               <span class="tag tag-amber">Detección de problemas</span>
             </div>
           </div>
@@ -557,44 +560,82 @@
 
         <div class="nav-bar">
           <button class="btn-nav" onclick="goBlock(2)">← Code Review</button>
-          <button class="btn-nav primary" onclick="goBlock(4)">Liderazgo →</button>
+          <button class="btn-nav primary" onclick="goBlock(4)">IA en el día a día →</button>
         </div>
       </div>
 
-      <!-- BLOQUE 5: LIDERAZGO -->
+      <!-- BLOQUE 5: IA EN EL DÍA A DÍA -->
       <div class="block-section" id="block-4">
         <div class="block-heading">
-          <div class="block-icon-wrap" style="background:var(--purple-light)">🧭</div>
+          <div class="block-icon-wrap" style="background:#EDE9FE">🤖</div>
           <div>
-            <h2>Bloque 5 — Liderazgo técnico incipiente</h2>
+            <h2>Bloque 5 — IA en el día a día</h2>
             <div class="block-meta-row">
-              <span class="tag tag-purple">10 min</span>
-              <span class="tag tag-purple">20 pts</span>
+              <span class="tag tag-purple">5 min</span>
+              <span class="tag tag-purple">10 pts</span>
               <span class="tag tag-purple">Respuesta abierta</span>
             </div>
           </div>
         </div>
 
         <div class="q-wrap">
-          <div class="q-header"><span class="q-number">Pregunta 1</span><span class="q-pts">8 pts</span></div>
+          <div class="q-header"><span class="q-number">Pregunta 1</span><span class="q-pts">4 pts</span></div>
+          <div class="q-text">¿Qué herramientas de IA usas actualmente en tu trabajo como desarrollador? (ej: Copilot, ChatGPT, Cursor, Claude…) Describe para qué las usas concretamente y con qué frecuencia.</div>
+          <textarea class="open-ans" id="q_ai1" placeholder="Describe las herramientas que usas y para qué las usas..."></textarea>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta 2</span><span class="q-pts">3 pts</span></div>
+          <div class="q-text">Dame un ejemplo real de una tarea de desarrollo donde usaste IA para ser más productivo. ¿Qué hiciste tú y qué hizo la IA? ¿Cuánto tiempo te ahorró?</div>
+          <textarea class="open-ans" id="q_ai2" placeholder="Describe el ejemplo concreto..."></textarea>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta 3</span><span class="q-pts">3 pts</span></div>
+          <div class="q-text">¿Cuáles son los límites o riesgos que tienes en cuenta cuando usas IA en código de producción? ¿Qué tipo de tareas NO delegarías a una herramienta de IA?</div>
+          <textarea class="open-ans" id="q_ai3" placeholder="Describe tus criterios de uso responsable de IA..."></textarea>
+        </div>
+
+        <div class="nav-bar">
+          <button class="btn-nav" onclick="goBlock(3)">← Procesos</button>
+          <button class="btn-nav primary" onclick="goBlock(5)">Liderazgo →</button>
+        </div>
+      </div>
+
+      <!-- BLOQUE 6: LIDERAZGO -->
+      <div class="block-section" id="block-5">
+        <div class="block-heading">
+          <div class="block-icon-wrap" style="background:var(--purple-light)">🧭</div>
+          <div>
+            <h2>Bloque 6 — Liderazgo técnico incipiente</h2>
+            <div class="block-meta-row">
+              <span class="tag tag-purple">10 min</span>
+              <span class="tag tag-purple">15 pts</span>
+              <span class="tag tag-purple">Respuesta abierta</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="q-wrap">
+          <div class="q-header"><span class="q-number">Pregunta 1</span><span class="q-pts">6 pts</span></div>
           <div class="q-text">Describe una decisión técnica relevante que hayas tomado en los últimos 6 meses. ¿Qué alternativas evaluaste, cómo la tomaste y qué resultó?</div>
           <textarea class="open-ans" id="q_l1" placeholder="Describe la situación, las alternativas evaluadas y el resultado..."></textarea>
         </div>
 
         <div class="q-wrap">
-          <div class="q-header"><span class="q-number">Pregunta 2</span><span class="q-pts">6 pts</span></div>
+          <div class="q-header"><span class="q-number">Pregunta 2</span><span class="q-pts">5 pts</span></div>
           <div class="q-text">Si tuvieras que hacer el onboarding de un desarrollador Junior nuevo al equipo hoy, ¿qué harías/entregarías durante su primera semana?</div>
           <textarea class="open-ans" id="q_l2" placeholder="Describe tu plan de onboarding..."></textarea>
         </div>
 
         <div class="q-wrap">
-          <div class="q-header"><span class="q-number">Pregunta 3</span><span class="q-pts">6 pts</span></div>
+          <div class="q-header"><span class="q-number">Pregunta 3</span><span class="q-pts">4 pts</span></div>
           <div class="q-text">¿Qué hace un Pull Request de calidad? Describe cómo son tus PRs actualmente y qué mejorarías.</div>
           <textarea class="open-ans" id="q_l3" placeholder="Describe tu criterio de calidad para PRs..."></textarea>
         </div>
 
         <div class="nav-bar">
-          <button class="btn-nav" onclick="goBlock(3)">← Procesos</button>
+          <button class="btn-nav" onclick="goBlock(4)">← IA en el día a día</button>
           <button class="btn-nav primary" onclick="submitExam()" id="btn-submit">Enviar evaluación ✓</button>
         </div>
       </div>
@@ -703,7 +744,11 @@
       proc_1: document.getElementById('q_p1').value,
       proc_2: document.getElementById('q_p2').value,
       proc_3: document.getElementById('q_p3').value,
-      // Bloque 5
+      // Bloque 5 - IA
+      ai_1: document.getElementById('q_ai1').value,
+      ai_2: document.getElementById('q_ai2').value,
+      ai_3: document.getElementById('q_ai3').value,
+      // Bloque 6
       lid_1: document.getElementById('q_l1').value,
       lid_2: document.getElementById('q_l2').value,
       lid_3: document.getElementById('q_l3').value,
